@@ -1,0 +1,178 @@
+# PIPELINE DEFINITION
+# Name: simple-ml-pipeline
+# Description: Простой ML-процесс: подготовка данных, обучение и оценка модели.
+components:
+  comp-evaluate-model:
+    executorLabel: exec-evaluate-model
+    inputDefinitions:
+      parameters:
+        coefficient:
+          parameterType: NUMBER_DOUBLE
+    outputDefinitions:
+      parameters:
+        Output:
+          parameterType: STRING
+  comp-prepare-data:
+    executorLabel: exec-prepare-data
+    outputDefinitions:
+      parameters:
+        Output:
+          parameterType: LIST
+  comp-train-model:
+    executorLabel: exec-train-model
+    inputDefinitions:
+      parameters:
+        data:
+          parameterType: LIST
+    outputDefinitions:
+      parameters:
+        Output:
+          parameterType: NUMBER_DOUBLE
+deploymentSpec:
+  executors:
+    exec-evaluate-model:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - evaluate_model
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.18.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"\
+          $0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef evaluate_model(coefficient: float) -> str:\n    result = \"\u0443\
+          \u0441\u043F\u0435\u0448\u043D\u043E\" if coefficient == 7 else \"\u043E\
+          \u0448\u0438\u0431\u043A\u0430\"\n    print(\"\u041E\u0446\u0435\u043D\u043A\
+          \u0430 \u043C\u043E\u0434\u0435\u043B\u0438:\", result)\n    print(\"\u041F\
+          \u043E\u043B\u0443\u0447\u0435\u043D\u043D\u044B\u0439 \u043A\u043E\u044D\
+          \u0444\u0444\u0438\u0446\u0438\u0435\u043D\u0442:\", coefficient)\n    return\
+          \ result\n\n"
+        image: python:3.10-slim
+    exec-prepare-data:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - prepare_data
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.18.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"\
+          $0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef prepare_data() -> list:\n    data = [2, 4, 6, 8, 10, 12]\n  \
+          \  print(\"\u0414\u0430\u043D\u043D\u044B\u0435 \u043F\u043E\u0434\u0433\
+          \u043E\u0442\u043E\u0432\u043B\u0435\u043D\u044B:\", data)\n    return data\n\
+          \n"
+        image: python:3.10-slim
+    exec-train-model:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - train_model
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.18.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"\
+          $0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef train_model(data: list) -> float:\n    coefficient = sum(data)\
+          \ / len(data)\n    print(\"\u041C\u043E\u0434\u0435\u043B\u044C \u043E\u0431\
+          \u0443\u0447\u0435\u043D\u0430. \u0421\u0440\u0435\u0434\u043D\u0435\u0435\
+          \ \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u0435:\", coefficient)\n  \
+          \  return coefficient\n\n"
+        image: python:3.10-slim
+pipelineInfo:
+  description: "\u041F\u0440\u043E\u0441\u0442\u043E\u0439 ML-\u043F\u0440\u043E\u0446\
+    \u0435\u0441\u0441: \u043F\u043E\u0434\u0433\u043E\u0442\u043E\u0432\u043A\u0430\
+    \ \u0434\u0430\u043D\u043D\u044B\u0445, \u043E\u0431\u0443\u0447\u0435\u043D\u0438\
+    \u0435 \u0438 \u043E\u0446\u0435\u043D\u043A\u0430 \u043C\u043E\u0434\u0435\u043B\
+    \u0438."
+  name: simple-ml-pipeline
+root:
+  dag:
+    tasks:
+      evaluate-model:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-evaluate-model
+        dependentTasks:
+        - train-model
+        inputs:
+          parameters:
+            coefficient:
+              taskOutputParameter:
+                outputParameterKey: Output
+                producerTask: train-model
+        taskInfo:
+          name: evaluate-model
+      prepare-data:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-prepare-data
+        taskInfo:
+          name: prepare-data
+      train-model:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-train-model
+        dependentTasks:
+        - prepare-data
+        inputs:
+          parameters:
+            data:
+              taskOutputParameter:
+                outputParameterKey: Output
+                producerTask: prepare-data
+        taskInfo:
+          name: train-model
+schemaVersion: 2.1.0
+sdkVersion: kfp-2.18.0
